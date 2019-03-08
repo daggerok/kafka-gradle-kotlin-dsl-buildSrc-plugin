@@ -64,31 +64,8 @@ class KafkaPlugin : Plugin<Project> {
       }
     }
 
-    tasks.register("kafkaClean", Delete::class.java) {
-      group = Kafka
-      description = "Cleanup all kafka-gradle-plugin files and directories"
-
-      isFollowSymlinks = false
-      delete(target.file(kafka.workDir))
-
-      doLast {
-        println("removed: ${kafka.workDir}")
-      }
-    }
-
-    tasks.register("kafkaRmTar", Delete::class.java) {
-      group = Kafka
-      description = "Remove kafka archive"
-
-      isFollowSymlinks = false
-      delete(kafka.getTar())
-
-      doLast {
-        println("removed: ${kafka.getTar()}")
-      }
-    }
-
-    tasks.register("kafkaRmHome", Delete::class.java) {
+    val kafkaCleanHome = "kafkaCleanHome"
+    tasks.register(kafkaCleanHome, Delete::class.java) {
       group = Kafka
       description = "Remove kafka home directory"
 
@@ -100,23 +77,52 @@ class KafkaPlugin : Plugin<Project> {
       }
     }
 
+    val kafkaCleanArchive = "kafkaCleanArchive"
+    tasks.register(kafkaCleanArchive, Delete::class.java) {
+      group = Kafka
+      description = "Remove kafka archive"
+      shouldRunAfter(kafkaCleanHome)
+
+      isFollowSymlinks = false
+      delete(kafka.getTar())
+
+      doLast {
+        println("removed: ${kafka.getTar()}")
+      }
+    }
+
+    tasks.register("kafkaClean", Delete::class.java) {
+      group = Kafka
+      description = "Cleanup all kafka-gradle-plugin files and directories"
+      dependsOn(kafkaCleanHome, kafkaCleanArchive)
+      shouldRunAfter(kafkaCleanHome, kafkaCleanArchive)
+
+      isFollowSymlinks = false
+      delete(target.file(kafka.workDir))
+
+      doLast {
+        println("removed: ${kafka.workDir}")
+      }
+    }
+
     val kafkaDownload = "kafkaDownload"
     tasks.register(kafkaDownload) {
       group = Kafka
       description = "Download kafka binaries"
 
       doLast {
-        if (kafka.getTar().exists())
+        if (kafka.getTar().exists()) {
           println("using ${kafka.getFilename()} from cache: ${kafka.getTar()}")
-        else {
-          val kafkaTarArchiveUrl = URL(kafka.downloadUrl)
-          Channels.newChannel(kafkaTarArchiveUrl.openStream()).use { rbc ->
-            println("create workDir: ${kafka.workDir}")
-            kafka.getTar().parentFile.absoluteFile.mkdirs()
-            println("download ${kafka.getFilename()} archive from: ${kafka.downloadUrl}")
-            FileOutputStream(kafka.getTar().absolutePath).use { fos ->
-              fos.channel.transferFrom(rbc, 0, Long.MAX_VALUE)
-            }
+          return@doLast
+        }
+
+        val kafkaTarArchiveUrl = URL(kafka.downloadUrl)
+        Channels.newChannel(kafkaTarArchiveUrl.openStream()).use { rbc ->
+          println("create workDir: ${kafka.workDir}")
+          kafka.getTar().parentFile.absoluteFile.mkdirs()
+          println("download ${kafka.getFilename()} archive from: ${kafka.downloadUrl}")
+          FileOutputStream(kafka.getTar().absolutePath).use { fos ->
+            fos.channel.transferFrom(rbc, 0, Long.MAX_VALUE)
           }
         }
       }
@@ -143,8 +149,7 @@ class KafkaPlugin : Plugin<Project> {
       dependsOn(kafkaExtract)
 
       workingDir = kafka.getHome().toFile()
-      executable = "bash"
-      args("-c", "./bin/zookeeper-server-start.sh -daemon ./config/zookeeper.properties")
+      commandLine("bash", "-c", "./bin/zookeeper-server-start.sh -daemon ./config/zookeeper.properties")
 
       doLast {
         println("starting up zookeeper...")
@@ -159,8 +164,7 @@ class KafkaPlugin : Plugin<Project> {
       shouldRunAfter(kafkaZookeeperStart)
 
       workingDir = kafka.getHome().toFile()
-      executable = "bash"
-      args("-c", "./bin/kafka-server-start.sh -daemon ./config/server.properties")
+      commandLine("bash", "-c", "./bin/kafka-server-start.sh -daemon ./config/server.properties")
 
       doLast {
         println("starting up kafka broker...")
@@ -185,8 +189,7 @@ class KafkaPlugin : Plugin<Project> {
       dependsOn(kafkaExtract)
 
       workingDir = kafka.getHome().toFile()
-      executable = "bash"
-      args("-c", "./bin/zookeeper-server-stop.sh")
+      commandLine("bash", "-c", "./bin/zookeeper-server-stop.sh")
 
       doLast {
         println("shutting down broker...")
@@ -200,8 +203,7 @@ class KafkaPlugin : Plugin<Project> {
       dependsOn(kafkaBrokerStop)
 
       workingDir = kafka.getHome().toFile()
-      executable = "bash"
-      args("-c", "./bin/zookeeper-server-stop.sh")
+      commandLine("bash", "-c", "./bin/zookeeper-server-stop.sh")
 
       doLast {
         println("shutting down zookeeper...")
