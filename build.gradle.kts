@@ -1,5 +1,5 @@
 plugins {
-    `java-library`
+    java
     kafka
 }
 
@@ -9,10 +9,6 @@ kafka {
 
 group = "com.github.daggerok"
 version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
 
 defaultTasks("build")
 
