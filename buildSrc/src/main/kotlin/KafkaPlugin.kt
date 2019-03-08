@@ -32,8 +32,10 @@ open class KafkaExtension(var scalaVersion: String = SCALA_VERSION.getEnvOrSyste
     }
     private fun toBaseName(scalaVersion: String, kafkaVersion: String) = "kafka_$scalaVersion-$kafkaVersion"
     private fun toFilename(scalaVersion: String, kafkaVersion: String) = "${toBaseName(scalaVersion, kafkaVersion)}.tgz"
-    private fun toTar(scalaVersion: String, kafkaVersion: String, workDir: String) = Paths.get(workDir, toFilename(scalaVersion, kafkaVersion)).toFile()
-    private fun toDownloadUrl(scalaVersion: String, kafkaVersion: String) = "https://www-eu.apache.org/dist/kafka/$kafkaVersion/${toFilename(scalaVersion, kafkaVersion)}"
+    private fun toTar(scalaVersion: String, kafkaVersion: String, workDir: String) =
+      Paths.get(workDir, toFilename(scalaVersion, kafkaVersion)).toFile()
+    private fun toDownloadUrl(scalaVersion: String, kafkaVersion: String) =
+        "https://www-eu.apache.org/dist/kafka/$kafkaVersion/${toFilename(scalaVersion, kafkaVersion)}"
   }
 
   override fun toString() = KafkaData(scalaVersion, kafkaVersion, downloadUrl, workDir)
@@ -104,10 +106,8 @@ class KafkaPlugin : Plugin<Project> {
       description = "Download kafka binaries"
 
       doLast {
-
         if (kafka.getTar().exists())
           println("using ${kafka.getFilename()} from cache: ${kafka.getTar()}")
-
         else {
           val kafkaTarArchiveUrl = URL(kafka.downloadUrl)
           Channels.newChannel(kafkaTarArchiveUrl.openStream()).use { rbc ->
@@ -170,7 +170,7 @@ class KafkaPlugin : Plugin<Project> {
 
     tasks.register("kafkaStart") {
       group = Kafka
-      description = "Stop kafka broker"
+      description = "Start kafka"
       finalizedBy(kafkaZookeeperStart, kafkaBrokerStart)
 
       doLast {
@@ -210,7 +210,7 @@ class KafkaPlugin : Plugin<Project> {
 
     tasks.register("kafkaStop") {
       group = Kafka
-      description = "Stop kafka broker"
+      description = "Stop kafka"
       finalizedBy(kafkaZookeeperStop, kafkaZookeeperStop)
 
       doLast {
