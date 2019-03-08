@@ -24,7 +24,7 @@ NOTE: _This plugin is intended to use only in UNIX at the moment..._
 ## usage
 
 ```bash
-# startup kafka:
+# startup kafka: ./gradlew kStart # or:
 ./gradlew kafkaZookeeperStart # wait few seconds...
 ./gradlew kafkaBrokerStart
 
@@ -44,7 +44,7 @@ bash ./build/producer/bin/kafka-java-example one and two and three and four...
 
 # shutdown and cleanup:
 cd .. 
-./gradlew kafkaStop
+./gradlew kStop
 killall -9 java
 rm -rf kafka-java-example
 ```
