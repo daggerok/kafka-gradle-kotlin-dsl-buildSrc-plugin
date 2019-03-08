@@ -33,7 +33,7 @@ open class KafkaExtension(var scalaVersion: String = SCALA_VERSION.getEnvOrSyste
     private fun toBaseName(scalaVersion: String, kafkaVersion: String) = "kafka_$scalaVersion-$kafkaVersion"
     private fun toFilename(scalaVersion: String, kafkaVersion: String) = "${toBaseName(scalaVersion, kafkaVersion)}.tgz"
     private fun toTar(scalaVersion: String, kafkaVersion: String, workDir: String) =
-      Paths.get(workDir, toFilename(scalaVersion, kafkaVersion)).toFile()
+        Paths.get(workDir, toFilename(scalaVersion, kafkaVersion)).toFile()
     private fun toDownloadUrl(scalaVersion: String, kafkaVersion: String) =
         "https://www-eu.apache.org/dist/kafka/$kafkaVersion/${toFilename(scalaVersion, kafkaVersion)}"
   }

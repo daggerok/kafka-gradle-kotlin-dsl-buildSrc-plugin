@@ -15,3 +15,8 @@ defaultTasks("build")
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_1_8
 }
+
+tasks.withType<Wrapper> {
+    gradleVersion = Globals.gradleVersion
+    distributionType = Wrapper.DistributionType.BIN
+}
