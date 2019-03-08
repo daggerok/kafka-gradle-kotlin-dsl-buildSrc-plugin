@@ -1,5 +1,7 @@
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.Exec
@@ -142,6 +144,7 @@ class KafkaPlugin : Plugin<Project> {
       }
     }
 
+    val notWindows = !Os.isFamily(Os.FAMILY_WINDOWS)
     val kafkaZookeeperStart = "kafkaZookeeperStart"
     tasks.register(kafkaZookeeperStart, Exec::class.java) {
       group = Kafka
@@ -149,7 +152,8 @@ class KafkaPlugin : Plugin<Project> {
       dependsOn(kafkaExtract)
 
       workingDir = kafka.getHome().toFile()
-      commandLine("bash", "-c", "./bin/zookeeper-server-start.sh -daemon ./config/zookeeper.properties")
+      if (notWindows) commandLine("sh", "-c", "bin/zookeeper-server-start.sh -daemon config/zookeeper.properties")
+      else commandLine("cmd", "/c", "bin\\windows\\zookeeper-server-start.bat -daemon config\\zookeeper.properties")
 
       doLast {
         println("starting up zookeeper...")
@@ -164,7 +168,8 @@ class KafkaPlugin : Plugin<Project> {
       shouldRunAfter(kafkaZookeeperStart)
 
       workingDir = kafka.getHome().toFile()
-      commandLine("bash", "-c", "./bin/kafka-server-start.sh -daemon ./config/server.properties")
+      if (notWindows) commandLine("sh", "-c", "bin/kafka-server-start.sh -daemon config/server.properties")
+      else commandLine("cmd", "/c", "bin\\windows\\kafka-server-start.bat -daemon config\\server.properties")
 
       doLast {
         println("starting up kafka broker...")
@@ -189,7 +194,9 @@ class KafkaPlugin : Plugin<Project> {
       dependsOn(kafkaExtract)
 
       workingDir = kafka.getHome().toFile()
-      commandLine("bash", "-c", "./bin/zookeeper-server-stop.sh")
+      if (notWindows) commandLine("sh", "-c", "bin/kafka-server-stop.sh")
+      else commandLine("cmd", "/c", "bin\\windows\\kafka-server-stop.bat")
+      isIgnoreExitValue = true // please, do not fail if anything to stop...
 
       doLast {
         println("shutting down broker...")
@@ -200,10 +207,12 @@ class KafkaPlugin : Plugin<Project> {
     tasks.register(kafkaZookeeperStop, Exec::class.java) {
       group = Kafka
       description = "Stop zooKeeper server"
-      dependsOn(kafkaBrokerStop)
+      dependsOn(kafkaExtract)
 
       workingDir = kafka.getHome().toFile()
-      commandLine("bash", "-c", "./bin/zookeeper-server-stop.sh")
+      if (notWindows) commandLine("sh", "-c", "bin/zookeeper-server-stop.sh")
+      else commandLine("cmd", "/c", "bin\\windows\\zookeeper-server-stop.bat")
+      isIgnoreExitValue = true // please, do not fail if anything to stop...
 
       doLast {
         println("shutting down zookeeper...")
@@ -213,10 +222,46 @@ class KafkaPlugin : Plugin<Project> {
     tasks.register("kafkaStop") {
       group = Kafka
       description = "Stop kafka"
-      finalizedBy(kafkaZookeeperStop, kafkaZookeeperStop)
+      finalizedBy(kafkaBrokerStop, kafkaZookeeperStop)
 
       doLast {
         println("shutting down kafka...")
+      }
+    }
+
+    tasks.register("kafkaZookeeperRestart") {
+      group = Kafka
+      description = "Restart zookeeper server"
+      dependsOn(kafkaZookeeperStop)
+      shouldRunAfter(kafkaZookeeperStop)
+      finalizedBy(kafkaZookeeperStart)
+
+      doLast {
+        println("restarting zookeeper...")
+      }
+    }
+
+    tasks.register("kafkaBrokerRestart") {
+      group = Kafka
+      description = "Restart kafka broker"
+      dependsOn(kafkaBrokerStop)
+      shouldRunAfter(kafkaBrokerStop)
+      finalizedBy(kafkaBrokerStart)
+
+      doLast {
+        println("restarting kafka...")
+      }
+    }
+
+    tasks.register("kafkaRestart") {
+      group = Kafka
+      description = "Restart kafka"
+      dependsOn(kafkaZookeeperStop, kafkaZookeeperStop)
+      shouldRunAfter(kafkaZookeeperStop, kafkaZookeeperStop)
+      finalizedBy(kafkaZookeeperStart, kafkaBrokerStart)
+
+      doLast {
+        println("restarting kafka...")
       }
     }
   }

@@ -21,6 +21,10 @@ NOTE: _This plugin is intended to use only in UNIX at the moment..._
 - kafkaZookeeperStop
 - kafkaStop
 
+- kafkaBrokerRestart
+- kafkaZookeeperRestart
+- kafkaRestart
+
 ## usage
 
 _start kafka_
