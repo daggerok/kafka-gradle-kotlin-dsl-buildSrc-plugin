@@ -85,4 +85,4 @@ jps
 1871 GradleDaemon
 ```
 
-if you can see both: `QuorumPeerMain` and `Kafka`, them kafka is started.
+if you can see both: `QuorumPeerMain` and `Kafka`, then kafka is started.
