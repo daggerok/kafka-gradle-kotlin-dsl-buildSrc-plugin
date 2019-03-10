@@ -8,7 +8,7 @@ NOTE: _This plugin is intended to use only in UNIX at the moment..._
 - kafkaInfo
 - kafkaClean
 - kafkaCleanArchive
-- kafkaCleanHome
+- kafkaCleanData
 
 - kafkaDownload
 - kafkaExtract
