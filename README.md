@@ -1,6 +1,8 @@
 # kafka-gradle-plugin
 Download, extract and start / stop kafka together with zookeeper easily by using Gradle
 
+<img src="./logo_gradke_kotlin_dsl.png" alt="gradle-kotlin-dsl" width="19%"/> <img src="./logo_kafka.png" alt="kafka" width="80%"/>
+
 NOTE: _This plugin is intended to use only in UNIX at the moment..._
 
 ## available tasks
